@@ -13,9 +13,22 @@ class BreedCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'name'] 
 
 class OwnerSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        if 'request' in self.context:
+            validated_data['user'] = self.context['request'].user
+            
+        return super().create(validated_data)
+    
+    # def create(self, validated_data):
+    #     # Получаем текущего пользователя из контекста запроса
+    #     user = self.context['request'].user 
+    #     # Создаем объект Owner с привязкой к пользователю
+    #     owner = Owner.objects.create(user=user, **validated_data)
+    #     return owner
+    
     class Meta:
         model = Owner
-        fields = ['id', 'first_name', 'last_name', 'phone_number', 'pictureOwner']
+        fields = ['id', 'first_name', 'last_name', 'phone_number', 'pictureOwner', 'user']
 
 class HobbySerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,16 +48,23 @@ class DogListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Dog
-        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture']  
+        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']  
 
 
 class DogCreateSerializer(serializers.ModelSerializer):
+    # def create(self, validated_data):
+    #     # Получаем текущего пользователя из контекста запроса
+    #     user = self.context['request'].user
+    #     # Создаем объект Dog с привязкой к пользователю
+    #     dog = Dog.objects.create(user=user, **validated_data)
+    #     return dog
+
     class Meta:
         model = Dog
-        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture']
+        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']
 
 
 class DogUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dog
-        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture']            
+        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']            

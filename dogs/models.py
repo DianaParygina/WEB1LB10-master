@@ -18,6 +18,7 @@ class Dog(models.Model):
     country = models.ForeignKey("Country", on_delete=models.CASCADE, null=True, related_name='dog_country')
     hobby = models.ForeignKey("Hobby", on_delete=models.CASCADE, null=True, related_name='dog_hobby')
     picture = models.ImageField("Изображение", null=True, upload_to="dogs")
+    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name = "Собака"
@@ -32,6 +33,7 @@ class Owner(models.Model):
     last_name = models.TextField("Фамилия")
     phone_number = models.TextField("Номер телефона")
     pictureOwner = models.ImageField("Изображение", null=True, upload_to="owner")
+    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name = "Владелец"
