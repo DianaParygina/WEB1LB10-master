@@ -3,7 +3,8 @@ from rest_framework import mixins, viewsets, permissions, serializers
 from django.db.models import Avg, Count, Max, Min
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django_filters.rest_framework import DjangoFilterBackend
 
 from dogs.models import Breed, Dog, Owner, Country, Hobby
 from dogs.serializers import DogCreateSerializer, DogListSerializer, BreedSerializer, OwnerSerializer, CountrySerializer, HobbySerializer, DogUpdateSerializer
@@ -29,10 +30,10 @@ class DogsViewset(
     queryset = Dog.objects.all()
     serializer_class = DogListSerializer
     permission_classes = [IsAuthenticated]
-
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['user'] 
 
     def get_serializer_class(self):
-        # print(self.action)
         if self.action == 'create':
             return DogCreateSerializer
         if self.action == 'update':
@@ -40,10 +41,16 @@ class DogsViewset(
         return super(DogsViewset, self).get_serializer_class()        
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        
-        # фильтруем по текущему юзеру
-        qs = qs.filter(user=self.request.user)
+        qs = super().get_queryset()  # Используем super() для получения queryset
+
+        # Если пользователь не суперпользователь, фильтруем по текущему пользователю
+        if not self.request.user.is_superuser:
+            qs = qs.filter(user=self.request.user)
+        else:
+            # Если суперпользователь, добавляем возможность фильтрации по пользователю
+            user_id = self.request.query_params.get('user_id', None)  # Получаем user_id из параметров запроса
+            if user_id is not None:
+                qs = qs.filter(user_id=user_id)
 
         return qs
         
@@ -61,6 +68,10 @@ class DogsViewset(
             max=Max('id'),
             min=Min('id'),
         )
+
+        serializer = self.StatsSerializer(instance=stats)
+
+        return Response(serializer.data) 
 
 class BreedsViewset(
     mixins.CreateModelMixin, 
@@ -84,12 +95,20 @@ class OwnersViewset(
     queryset = Owner.objects.all()
     serializer_class = OwnerSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['user']
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        
-        # фильтруем по текущему юзеру
-        qs = qs.filter(user=self.request.user)
+        qs = super().get_queryset()  # Используем super() для получения queryset
+
+        # Если пользователь не суперпользователь, фильтруем по текущему пользователю
+        if not self.request.user.is_superuser:
+            qs = qs.filter(user=self.request.user)
+        else:
+            # Если суперпользователь, добавляем возможность фильтрации по пользователю
+            user_id = self.request.query_params.get('user_id', None)  # Получаем user_id из параметров запроса
+            if user_id is not None:
+                qs = qs.filter(user_id=user_id)
 
         return qs
         

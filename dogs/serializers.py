@@ -17,7 +17,7 @@ class OwnerSerializer(serializers.ModelSerializer):
         if 'request' in self.context:
             validated_data['user'] = self.context['request'].user
             
-        return super().create(validated_data)
+            return super().create(validated_data)
     
     # def create(self, validated_data):
     #     # Получаем текущего пользователя из контекста запроса
@@ -29,6 +29,7 @@ class OwnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Owner
         fields = ['id', 'first_name', 'last_name', 'phone_number', 'pictureOwner', 'user']
+        read_only_fields = ['user'] 
 
 class HobbySerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,22 +50,24 @@ class DogListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dog
         fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']  
+        read_only_fields = ['user']
 
 
 class DogCreateSerializer(serializers.ModelSerializer):
-    # def create(self, validated_data):
-    #     # Получаем текущего пользователя из контекста запроса
-    #     user = self.context['request'].user
-    #     # Создаем объект Dog с привязкой к пользователю
-    #     dog = Dog.objects.create(user=user, **validated_data)
-    #     return dog
+    def create(self, validated_data):
+        # Получаем текущего пользователя из контекста запроса
+        user = self.context['request'].user
+        # Создаем объект Dog с привязкой к пользователю
+        dog = Dog.objects.create(user=user, **validated_data)
+        return dog
 
     class Meta:
         model = Dog
         fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']
-
+        read_only_fields = ['user']
 
 class DogUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dog
-        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']            
+        fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']        
+        read_only_fields = ['user']    

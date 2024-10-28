@@ -72,10 +72,10 @@ async function onDogAdd() {
   formData.append('picture', dogsPicturesRef.value.files[0]);
 
   formData.set('name', dogToAdd.value.name)
-  formData.set('breed', dogToAdd.value.breed.id);
-  formData.set('owner', dogToAdd.value.owner.id);
-  formData.set('country', dogToAdd.value.country.id);
-  formData.set('hobby', dogToAdd.value.hobby.id); 
+  formData.set('breed', dogToAdd.value.breed);
+  formData.set('owner', dogToAdd.value.owner);
+  formData.set('country', dogToAdd.value.country);
+  formData.set('hobby', dogToAdd.value.hobby); 
 
   await axios.post("/api/dogs/", formData, {
     headers: {

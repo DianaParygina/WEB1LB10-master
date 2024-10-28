@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 class Breed(models.Model):
     name = models.TextField("Название породы")
@@ -18,7 +19,7 @@ class Dog(models.Model):
     country = models.ForeignKey("Country", on_delete=models.CASCADE, null=True, related_name='dog_country')
     hobby = models.ForeignKey("Hobby", on_delete=models.CASCADE, null=True, related_name='dog_hobby')
     picture = models.ImageField("Изображение", null=True, upload_to="dogs")
-    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name = "Собака"
