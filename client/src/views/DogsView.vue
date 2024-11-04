@@ -2,6 +2,8 @@
 import { computed, ref, onBeforeMount } from 'vue';
 import axios from "axios";
 import Cookies from 'js-cookie';
+import { storeToRefs } from 'pinia';
+import useUserState from '../../stores/userStore';
 
 const dogs = ref([]);
 const dogToAdd = ref({});
@@ -12,6 +14,15 @@ const dogAddImageUrl = ref();
 const dogEditImageUrl = ref();
 const showModal = ref(false);
 const selectedImage = ref(null);
+
+
+const userStore = useUserState();
+const {
+        isAuthenticated,
+        userName,
+        userId
+} = storeToRefs(userStore);
+
 
 const breed = ref([]);
 const owner = ref([]);
@@ -135,6 +146,7 @@ onBeforeMount(() => {
 
 <template>
   <div>
+    <div>{{ userId }}</div>
     <button @click="onLoadClick">Загрузить собак</button>
 
     <div v-for="dog in dogs" class="dog-item">

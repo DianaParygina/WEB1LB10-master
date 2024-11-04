@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 from dogs import views
 from rest_framework.routers import DefaultRouter
 
-from dogs.api import DogsViewset, BreedsViewset, CountryViewset, HobbyViewset, OwnersViewset
+from dogs.api import DogsViewset, BreedsViewset, CountryViewset, HobbyViewset, OwnersViewset, UserViewset
 
 router = DefaultRouter() 
 router.register("dogs", DogsViewset, basename="dogs")
@@ -30,6 +30,7 @@ router.register("breed", BreedsViewset, basename="breed")
 router.register("owner", OwnersViewset, basename="owner")
 router.register("country", CountryViewset, basename="country")
 router.register("hobby", HobbyViewset, basename="hobby")
+router.register("user", UserViewset, basename="user")
 
 urlpatterns = [
     path('', views.ShowDogsView.as_view()),

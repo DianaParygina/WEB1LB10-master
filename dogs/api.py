@@ -5,9 +5,39 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth import authenticate, login, logout
 
 from dogs.models import Breed, Dog, Owner, Country, Hobby
 from dogs.serializers import DogCreateSerializer, DogListSerializer, BreedSerializer, OwnerSerializer, CountrySerializer, HobbySerializer, DogUpdateSerializer
+
+
+class UserViewset(GenericViewSet):
+        @action(detail=False, methods=['GET'], url_path='info')
+        def get_info(self, request, *args, **kwargs):
+            data = {
+                "is_authenticated": request.user.is_authenticated
+            }
+            if request.user.is_authenticated:
+                data.update({
+                    "username": request.user.username,
+                    "user_id":request.user.id
+                })
+            return Response(data)
+        
+        @action(detail=False, methods=['POST'], url_path='login')
+        def login(self, request, *args, **kwargs):
+            user = request.data["user"],
+            pas = request.data["pass"]
+            user = authenticate(request, username = user, password = pas)
+            if user:
+                login(request,user)
+            return Response({})
+        
+        @action(detail=False, methods=['POST'], url_path='logout')
+        def logout(self, request, *args, **kwargs):
+            logout(request)
+            return Response({})
+
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -27,7 +57,7 @@ class DogsViewset(
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
     GenericViewSet):
-    queryset = Dog.objects.all()
+    queryset = Dog.objects.all().order_by("id")
     serializer_class = DogListSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
