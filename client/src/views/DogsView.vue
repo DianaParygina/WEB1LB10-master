@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onBeforeMount } from 'vue';
+import { computed, ref, onBeforeMount, watch } from 'vue';
 import axios from "axios";
 import Cookies from 'js-cookie';
 import { storeToRefs } from 'pinia';
@@ -15,25 +15,33 @@ const dogEditImageUrl = ref();
 const showModal = ref(false);
 const selectedImage = ref(null);
 
+const user = ref([]);
+
 
 const userStore = useUserState();
 const {
-        isAuthenticated,
-        userName,
-        userId
+  isAuthenticated,
+  userName,
+  userId,
+  owner
 } = storeToRefs(userStore);
 
 
 const breed = ref([]);
-const owner = ref([]);
+// const owner = ref([]);
 const country = ref([]);
 const hobby = ref([]);
 
+const selectedOwnerId = ref(null);
 const loading = ref(false);
 
 async function fetchDogs() {
   loading.value = true;
-  const r = await axios.get("/api/dogs/");
+  const r = await axios.get("/api/dogs/", {
+    params: {
+      user_id: selectedOwnerId.value,
+    }
+  });
   console.log(r.data)
   dogs.value = r.data;
   loading.value = false;
@@ -63,6 +71,12 @@ async function fetchCountry() {
   country.value = r.data;
 }
 
+async function fetchUsers() {
+  // const r = await axios.get("/api/users/info/");
+  // console.log(r.data)
+  // users.value = r.data;
+}
+
 async function dogsAddPictureChange() {
   dogAddImageUrl.value = URL.createObjectURL(dogsPicturesRef.value.files[0])
 }
@@ -86,7 +100,7 @@ async function onDogAdd() {
   formData.set('breed', dogToAdd.value.breed);
   formData.set('owner', dogToAdd.value.owner);
   formData.set('country', dogToAdd.value.country);
-  formData.set('hobby', dogToAdd.value.hobby); 
+  formData.set('hobby', dogToAdd.value.hobby);
 
   await axios.post("/api/dogs/", formData, {
     headers: {
@@ -134,36 +148,90 @@ async function onUpdateDog() {
 
 
 
+
+
+const dogStats = ref(null);
+const breedStats = ref(null);
+const ownerStats = ref(null);
+const countryStats = ref(null);
+const hobbyStats = ref(null);
+
+
+async function fetchDogStats() {
+  const r = await axios.get("/api/dogs/stats/");
+  dogStats.value = r.data;
+}
+
+
+
+
+
+
+
+
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+  userStore.fetchUser();
+  userStore.fetchOwner();
+  fetchDogs();
   fetchBreeds();
-  fetchOwner();
+  // fetchOwner();
   fetchCountry();
   fetchHobby();
+  fetchDogStats();
+  fetchUsers();
 })
+
+watch(selectedOwnerId, () => {
+  fetchDogs();
+});
 
 </script>
 
 <template>
-  <div>
-    <div>{{ userId }}</div>
-    <button @click="onLoadClick">Загрузить собак</button>
-
-    <div v-for="dog in dogs" class="dog-item">
-      <div>{{ dog.name }}</div>
-      <div v-show="dog.picture" @click="showModal = true; selectedImage = dog.picture"><img :src="dog.picture"
-          style="max-height: 60px;" data-bs-toggle="modal" data-bs-target="#pictureDogModal"></div>
-      <button class="btn btn-success" @click="onDogEditClick(dog)" data-bs-toggle="modal"
-        data-bs-target="#editDogModal">
-        <i class="bi bi-pen-fill"></i>
-      </button>
-      <button class="btn btn-danger" @click="onRemoveClick(dog)">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
+  <div v-if="owner">
+    <div class="col-1 m-2">
+          <div class="form-floating">
+            <select name="" id="" class="form-select" v-model="selectedOwnerId">
+              <option :value="u.id" v-for="u in owner">{{ u.first_name  }}</option>
+            </select>
+            <label for="floatingInput">Пользователь</label>
+          </div>
+        </div>
 
     <form @submit.prevent.stop="onDogAdd">
-      <div class="row">
+
+
+      <!-- <div>{{ userId }}</div> -->
+      <button @click="onLoadClick" class="btn btn-primary m-2">Загрузить собак</button>
+
+      <div class="row border align-items-center m-2 rounded" v-for="dog in dogs">
+        <div class="col-9">
+          <div class="dog-item">
+            {{ dog.name }}
+          </div>
+        </div>
+        <div class="col-1 m-1">
+          <div v-show="dog.picture" @click="showModal = true; selectedImage = dog.picture">
+            <img :src="dog.picture" style="max-height: 60px; border-radius: 10%;" data-bs-toggle="modal" data-bs-target="#pictureDogModal">
+          </div>
+        </div>
+        <div class="col">
+          <button class="btn btn-success" @click="onDogEditClick(dog)" data-bs-toggle="modal"
+            data-bs-target="#editDogModal">
+            <i class="bi bi-pen-fill"></i>
+          </button>
+        </div>
+        <div class="col">
+          <button class="btn btn-danger" @click="onRemoveClick(dog)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      </div>
+
+
+      
+      <div class="row m-1">
         <div class="col">
           <div class="form-floating">
             <input type="text" class="form-control" v-model="dogToAdd.name" required />
@@ -209,7 +277,7 @@ onBeforeMount(() => {
           </div>
         </div>
         <div class="col-auto">
-          <button class="btn btn-primary">
+          <button class="btn btn-primary m-2">
             Добавить
           </button>
         </div>
@@ -284,6 +352,14 @@ onBeforeMount(() => {
     </div>
   </div>
 
+  <div v-if="dogStats" class="m-3">
+    <h3>Статистика по собакам:</h3>
+    <p>Количество: {{ dogStats.count }}</p>
+    <p>Среднее id: {{ dogStats.avg }}</p>
+    <p>Максимальное id: {{ dogStats.max }}</p>
+    <p>Минимальное id: {{ dogStats.min }}</p>
+  </div>
+
 
 
   <div class="modal fade" id="pictureDogModal" tabindex="-1">
@@ -302,4 +378,7 @@ onBeforeMount(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+
+</style>

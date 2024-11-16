@@ -1,4 +1,4 @@
-<script>
+<script setup>
 import { useRoute } from 'vue-router';
 import {computed, ref, onBeforeMount} from 'vue';
 

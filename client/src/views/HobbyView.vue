@@ -46,9 +46,19 @@ async function onUpdateHobby() {
 }
 
 
+const hobbyStats = ref(null);
+
+
+async function fetchHobbyStats() {
+    const r = await axios.get("/api/hobby/stats/");
+    hobbyStats.value = r.data;
+}
+
+
 
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+  fetchHobbyStats();
 })
 
 </script>
@@ -121,6 +131,14 @@ onBeforeMount(() => {
       </div>
     </div>
   </div>
+
+  <div v-if="hobbyStats">
+      <h3>Статистика по хобби:</h3>
+      <p>Количество: {{ hobbyStats.count }}</p>
+      <p>Среднее id: {{ hobbyStats.avg }}</p>
+      <p>Максимальное id: {{ hobbyStats.max }}</p>
+      <p>Минимальное id: {{ hobbyStats.min }}</p>
+    </div>
 </template>
 
 

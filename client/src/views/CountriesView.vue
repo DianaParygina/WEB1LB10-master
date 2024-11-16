@@ -44,8 +44,19 @@ async function onUpdateCountry() {
   await fetchCountry(); 
 }
 
+
+const countryStats = ref(null);
+
+async function fetchCountryStats() {
+    const r = await axios.get("/api/country/stats/");
+    countryStats.value = r.data;
+}
+
+
+
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+  fetchCountryStats();
 })
 
 </script>
@@ -118,6 +129,14 @@ onBeforeMount(() => {
       </div>
     </div>
   </div>
+
+  <div v-if="countryStats">
+      <h3>Статистика по странам:</h3>
+      <p>Количество: {{ countryStats.count }}</p>
+      <p>Среднее id: {{ countryStats.avg }}</p>
+      <p>Максимальное id: {{ countryStats.max }}</p>
+      <p>Минимальное id: {{ countryStats.min }}</p>
+    </div>
 </template>
 
 

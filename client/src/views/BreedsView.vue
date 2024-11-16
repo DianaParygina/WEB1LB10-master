@@ -2,6 +2,9 @@
 import {computed, ref, onBeforeMount} from 'vue';
 import axios from "axios";
 import Cookies from 'js-cookie';
+import useUserState from '../../stores/userStore';
+
+const userStore = useUserState();
 
 const breed = ref({});
 const breedToEdit = ref({});
@@ -52,8 +55,18 @@ async function onUpdateBreed() {
 
 
 
+const breedStats = ref(null);
+
+async function fetchBreedStats() {
+    const r = await axios.get("/api/breed/stats/");
+    breedStats.value = r.data;
+}
+
+
+
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+  fetchBreedStats();
 })
 
 </script>
@@ -91,7 +104,7 @@ onBeforeMount(() => {
           </button>
         </div>
       </div>
-    </form>
+    </form>  
 
     <div class="modal fade" id="editDogModal2" tabindex="-1">
       <div class="modal-dialog">
@@ -125,11 +138,21 @@ onBeforeMount(() => {
         </div>
       </div>
     </div>
-  </div>
+  </div> 
+  
+
+
+  <div v-if="breedStats">
+      <h3>Статистика по пародам:</h3>
+      <p>Количество: {{ breedStats.count }}</p>
+      <p>Среднее id: {{ breedStats.avg }}</p>
+      <p>Максимальное id: {{ breedStats.max }}</p>
+      <p>Минимальное id: {{ breedStats.min }}</p>
+    </div>
 
     
        
-          
+       
 </template>
 
 

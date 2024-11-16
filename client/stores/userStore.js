@@ -7,6 +7,7 @@ const useUserState = defineStore("UserStore", ()=>{
     const isAuthenticated = ref(false);
     const userName = ref("");
     const userId = ref();
+    const owner = ref()
 
     async function fetchUser() {
         const r = await axios.get("/api/user/info/")
@@ -14,6 +15,14 @@ const useUserState = defineStore("UserStore", ()=>{
         userName.value = r.data.userName;
         userId.value = r.data.userId;
     }
+
+    async function fetchOwner() {
+        // loading.value = true;
+        const r = await axios.get("/api/owner/");
+        console.log(r.data)
+        owner.value = r.data;
+        // loading.value = false;
+      }
 
     onBeforeMount(()=> {
         fetchUser();
@@ -23,7 +32,9 @@ const useUserState = defineStore("UserStore", ()=>{
         isAuthenticated,
         userName,
         userId,
-        fetchUser
+        fetchUser,
+        fetchOwner,
+        owner,
     }
 })
 

@@ -2,6 +2,8 @@
 import { computed, ref, onBeforeMount } from 'vue';
 import axios from "axios";
 import Cookies from 'js-cookie';
+import { storeToRefs } from 'pinia';
+import useUserState from '../../stores/userStore';
 
 const owner = ref({});
 const ownerToEdit = ref({});
@@ -87,8 +89,19 @@ async function onUpdateOwner() {
 
 
 
+
+const ownerStats = ref(null);
+
+async function fetchOwnerStats() {
+    const r = await axios.get("/api/owner/stats/");
+    ownerStats.value = r.data;
+}
+
+
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+  fetchOwner();
+  fetchOwnerStats();
 })
 
 </script>
@@ -97,17 +110,25 @@ onBeforeMount(() => {
   <div><br>
     <button @click="onLoadClickForOwner">Загрузить хозяинов собак</button>
 
-    <div v-for="o in owner" class="owner-item">
+    <div v-for="o in owner" class="owner-item row border align-items-center m-2 rounded">
+      <div class="col-9">
       <div>{{ o.first_name }} {{ o.last_name }}</div>
+      </div>
+      <div class="col-1 m-1">
       <div v-show="o.pictureOwner" @click="showModal = true; selectedImage = o.pictureOwner"><img :src="o.pictureOwner"
-          style="max-height: 60px;" data-bs-toggle="modal" data-bs-target="#pictureOwnerModal"></div>
+          style="max-height: 60px; border-radius: 10%;" data-bs-toggle="modal" data-bs-target="#pictureOwnerModal"></div>
+          </div>
+          <div class="col">
       <button class="btn btn-success" @click="onOwnerEditClick(o)" data-bs-toggle="modal"
         data-bs-target="#editDogModal3">
         <i class="bi bi-pen-fill"></i>
       </button>
+      </div>
+      <div class="col">
       <button class="btn btn-danger" @click="onRemoveClickForOwner(o)">
         <i class="bi bi-x"></i>
       </button>
+      </div>
     </div>
 
     <form @submit.prevent.stop="onDogClickForOwner">
@@ -191,6 +212,15 @@ onBeforeMount(() => {
       </div>
     </div>
   </div>
+
+
+  <div v-if="ownerStats">
+      <h3>Статистика по владельцам:</h3>
+      <p>Количество: {{ ownerStats.count }}</p>
+      <p>Среднее id: {{ ownerStats.avg }}</p>
+      <p>Максимальное id: {{ ownerStats.max }}</p>
+      <p>Минимальное id: {{ ownerStats.min }}</p>
+    </div>
 
 
   <div class="modal fade" id="pictureOwnerModal" tabindex="-1">
