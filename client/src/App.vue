@@ -1,4 +1,7 @@
 <script setup>
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 </script>
 
@@ -36,6 +39,12 @@
         <ul class="dropdown-menu">
           <li><a class="dropdown-item" href="/admin">Админка</a></li>
         </ul>
+      </li>
+    </ul>
+
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <router-link class="nav-link" to="/login"> Вход</router-link>
       </li>
     </ul>
   </div>
