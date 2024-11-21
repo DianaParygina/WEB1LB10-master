@@ -152,7 +152,7 @@ class DogsViewset(
             if user_id:
                 qs = qs.filter(user_id=user_id)
 
-        return qs[:10]
+        return qs
         
     class StatsSerializer(serializers.Serializer):
         count = serializers.IntegerField()

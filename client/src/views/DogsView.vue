@@ -133,10 +133,10 @@ async function onUpdateDog() {
 
   dogEditImageUrl.value = null;
   formData.set('name', dogToEdit.value.name)
-  formData.set('breed', dogToEdit.value.breed.id)
-  formData.set('owner', dogToEdit.value.owner.id)
-  formData.set('country', dogToEdit.value.country.id)
-  formData.set('hobby', dogToEdit.value.hobby.id)
+  formData.set('breed', dogToEdit.value.breed)
+  formData.set('owner', dogToEdit.value.owner)
+  formData.set('country', dogToEdit.value.country)
+  formData.set('hobby', dogToEdit.value.hobby)
 
   await axios.put(`/api/dogs/${dogToEdit.value.id}/`, formData, {
     headers: {
@@ -199,7 +199,7 @@ watch(selectedOwnerId, () => {
           </div>
         </div>
 
-    <form @submit.prevent.stop="onDogAdd">
+    
 
 
       <!-- <div>{{ userId }}</div> -->
@@ -230,6 +230,8 @@ watch(selectedOwnerId, () => {
       </div>
 
 
+
+      <form @submit.prevent.stop="onDogAdd">
       
       <div class="row m-1">
         <div class="col">
