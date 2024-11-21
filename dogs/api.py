@@ -117,7 +117,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Разрешить запись только владельцу объекта прошедшему 2ф аунтиф
+        # Разрешить запись только владельцу объекта
         return obj.user == request.user and cache.get(f'otp_good:{request.user.id}', False)
 
 class DogsViewset(
@@ -142,7 +142,7 @@ class DogsViewset(
 
     def get_queryset(self):
         qs = super().get_queryset()  # Используем super() для получения queryset
-
+        print(self.request.user)
         # Если пользователь не суперпользователь, фильтруем по текущему пользователю
         if not self.request.user.is_superuser:
             qs = qs.filter(user=self.request.user)
@@ -162,6 +162,7 @@ class DogsViewset(
 
     @action(detail=False, methods=['GET'], url_path='stats')
     def get_stats(self, request, *args, **kwargs):
+        print('123')
         stats = Dog.objects.aggregate(
             count=Count('*'),
             avg=Avg('id'),
@@ -186,6 +187,7 @@ class BreedsViewset(
 
     @action(detail=False, methods=["GET"], url_path="stats")
     def get_stats(self, request, *args, **kwargs):
+        print('1')
         stats = Breed.objects.aggregate(
             count=Count("*"),
             avg=Avg("id"),

@@ -11,6 +11,7 @@ const useUserState = defineStore("UserStore", ()=>{
 
     async function fetchUser() {
         const r = await axios.get("/api/user/info/")
+        console.log(r.data)
         isAuthenticated.value = r.data.is_authenticated;
         userName.value = r.data.userName;
         userId.value = r.data.userId;
