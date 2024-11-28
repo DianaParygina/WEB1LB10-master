@@ -15,6 +15,7 @@ const selectedImage = ref(null);
 const ownersEditPicturesRef = ref({});
 const ownerEditImageUrl = ref();
 
+
 const loading = ref(false);
 
 async function fetchOwner() {
@@ -93,8 +94,8 @@ async function onUpdateOwner() {
 const ownerStats = ref(null);
 
 async function fetchOwnerStats() {
-    const r = await axios.get("/api/owner/stats/");
-    ownerStats.value = r.data;
+  const r = await axios.get("/api/owner/stats/");
+  ownerStats.value = r.data;
 }
 
 
@@ -108,56 +109,35 @@ onBeforeMount(() => {
 
 <template>
   <div><br>
-    <button @click="onLoadClickForOwner">Загрузить хозяинов собак</button>
-
-    <div v-for="o in owner" class="owner-item row border align-items-center m-2 rounded">
-      <div class="col-9">
-      <div>{{ o.first_name }} {{ o.last_name }}</div>
-      </div>
-      <div class="col-1 m-1">
-      <div v-show="o.pictureOwner" @click="showModal = true; selectedImage = o.pictureOwner"><img :src="o.pictureOwner"
-          style="max-height: 60px; border-radius: 10%;" data-bs-toggle="modal" data-bs-target="#pictureOwnerModal"></div>
-          </div>
-          <div class="col">
-      <button class="btn btn-success" @click="onOwnerEditClick(o)" data-bs-toggle="modal"
-        data-bs-target="#editDogModal3">
-        <i class="bi bi-pen-fill"></i>
-      </button>
-      </div>
-      <div class="col">
-      <button class="btn btn-danger" @click="onRemoveClickForOwner(o)">
-        <i class="bi bi-x"></i>
-      </button>
-      </div>
-    </div>
+    <button class="btn btn-primary m-2" @click="onLoadClickForOwner">Загрузить хозяинов собак</button>
 
     <form @submit.prevent.stop="onDogClickForOwner">
       <div class="row">
-        <div class="col-auto">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <input type="text" class="form-control" v-model="ownerToAdd.first_name" required />
             <label for="floatingInput">Имя хозяина</label>
           </div>
         </div>
-        <div class="col-auto">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <input type="text2" class="form-control" v-model="ownerToAdd.last_name" required />
             <label for="floatingInput">Фамилия хозяина</label>
           </div>
         </div>
-        <div class="col-auto">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <input type="text3" class="form-control" v-model="ownerToAdd.phone_number" required />
             <label for="floatingInput">Номер телефона хозяина</label>
           </div>
         </div>
-        <div class="col">
+        <div class="col-5 ms-1 m-3">
           <input class="form-control" type="file" ref="ownersPicturesRef" @change="ownersAddPictureChange">
         </div>
-        <div class="col">
+        <div class="col-1 m-3">
           <img :src="ownerAddImageUrl" style="max-height:  60px;" alt="">
         </div>
-        <div class="col-auto">
+        <div class="col-12 ms-1 m-2">
           <button class="btn btn-primary">
             Добавить
           </button>
@@ -165,8 +145,31 @@ onBeforeMount(() => {
       </div>
     </form>
 
+    <div v-for="o in owner" class="owner-item row border align-items-center m-2 rounded">
+      <div class="col-9">
+        <div>{{ o.first_name }} {{ o.last_name }}</div>
+      </div>
+      <div class="col-1 m-1">
+        <div v-show="o.pictureOwner" @click="showModal = true; selectedImage = o.pictureOwner"><img
+            :src="o.pictureOwner" style="max-height: 60px; border-radius: 10%;" data-bs-toggle="modal"
+            data-bs-target="#pictureOwnerModal"></div>
+      </div>
+      <div class="col">
+        <button class="btn btn-success" @click="onOwnerEditClick(o)" data-bs-toggle="modal"
+          data-bs-target="#editDogModal3">
+          <i class="bi bi-pen-fill"></i>
+        </button>
+      </div>
+      <div class="col">
+        <button class="btn btn-danger" @click="onRemoveClickForOwner(o)">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+
     <div class="modal fade" id="editDogModal3" tabindex="-1"
-    @hidden.bs.modal="dogsEditPicturesRef.value = null; dogEditImageUrl.value = null;">
+      @hidden.bs.modal="dogsEditPicturesRef.value = null; dogEditImageUrl.value = null;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -215,12 +218,14 @@ onBeforeMount(() => {
 
 
   <div v-if="ownerStats">
-      <h3>Статистика по владельцам:</h3>
-      <p>Количество: {{ ownerStats.count }}</p>
-      <p>Среднее id: {{ ownerStats.avg }}</p>
-      <p>Максимальное id: {{ ownerStats.max }}</p>
-      <p>Минимальное id: {{ ownerStats.min }}</p>
-    </div>
+    <div v-if="ownerStats" class="m-3">
+    <h3>Статистика по владельцам:</h3>
+    <p>Количество: {{ ownerStats.count }}</p>
+    <p>Среднее id: {{ ownerStats.avg }}</p>
+    <p>Максимальное id: {{ ownerStats.max }}</p>
+    <p>Минимальное id: {{ ownerStats.min }}</p>
+  </div>
+  </div>
 
 
   <div class="modal fade" id="pictureOwnerModal" tabindex="-1">

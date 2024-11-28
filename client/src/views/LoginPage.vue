@@ -34,8 +34,14 @@ async function login() {
       alert("Неверные учетные данные");
     }
   } catch (error) {
-    console.error("Ошибка входа:", error);
-    alert("Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.");
+    if (error.response && error.response.status === 401) {
+      // Обрабатываем ошибку 401 (Unauthorized)
+      alert(error.response.data.message || "Неверные учетные данные");
+    } else {
+      // Обрабатываем другие ошибки
+      console.error("Ошибка входа:", error);
+      alert("Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.");
+    }
   }
 }
 </script>

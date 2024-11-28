@@ -77,6 +77,8 @@ async function fetchUsers() {
   // users.value = r.data;
 }
 
+
+
 async function dogsAddPictureChange() {
   dogAddImageUrl.value = URL.createObjectURL(dogsPicturesRef.value.files[0])
 }
@@ -120,7 +122,13 @@ async function onRemoveClick(dog) {
 
 
 async function onDogEditClick(dog) {
-  dogToEdit.value = { ...dog };
+  dogToEdit.value = {
+    ...dog,
+    breed: dog.breed.id,
+    owner: dog.owner.id,
+    country: dog.country.id,
+    hobby: dog.hobby.id,
+  };
 }
 
 
@@ -158,7 +166,11 @@ const hobbyStats = ref(null);
 
 
 async function fetchDogStats() {
-  const r = await axios.get("/api/dogs/stats/");
+  const r = await axios.get("/api/dogs/stats/", {
+    params: {
+      user_id: selectedOwnerId.value  
+    }
+  });
   dogStats.value = r.data;
 }
 
@@ -171,6 +183,7 @@ async function fetchDogStats() {
 
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+
   userStore.fetchUser();
   userStore.fetchOwner();
   fetchDogs();
@@ -184,63 +197,40 @@ onBeforeMount(() => {
 
 watch(selectedOwnerId, () => {
   fetchDogs();
+  fetchDogStats();
 });
 
 </script>
 
 <template>
   <div v-if="owner">
-    <div class="col-1 m-2">
-          <div class="form-floating">
-            <select name="" id="" class="form-select" v-model="selectedOwnerId">
-              <option :value="u.id" v-for="u in owner">{{ u.first_name  }}</option>
-            </select>
-            <label for="floatingInput">Пользователь</label>
-          </div>
-        </div>
-
-    
-
-
-      <!-- <div>{{ userId }}</div> -->
-      <button @click="onLoadClick" class="btn btn-primary m-2">Загрузить собак</button>
-
-      <div class="row border align-items-center m-2 rounded" v-for="dog in dogs">
-        <div class="col-9">
-          <div class="dog-item">
-            {{ dog.name }}
-          </div>
-        </div>
-        <div class="col-1 m-1">
-          <div v-show="dog.picture" @click="showModal = true; selectedImage = dog.picture">
-            <img :src="dog.picture" style="max-height: 60px; border-radius: 10%;" data-bs-toggle="modal" data-bs-target="#pictureDogModal">
-          </div>
-        </div>
-        <div class="col">
-          <button class="btn btn-success" @click="onDogEditClick(dog)" data-bs-toggle="modal"
-            data-bs-target="#editDogModal">
-            <i class="bi bi-pen-fill"></i>
-          </button>
-        </div>
-        <div class="col">
-          <button class="btn btn-danger" @click="onRemoveClick(dog)">
-            <i class="bi bi-x"></i>
-          </button>
+    <div class="row m-1">
+      <div class="col-3 m-2">
+        <div class="form-floating">
+          <select name="" id="" class="form-select" v-model="selectedOwnerId">
+            <option :value="u.id" v-for="u in owner">{{ u.first_name }}</option>
+          </select>
+          <label for="floatingInput">Пользователь</label>
         </div>
       </div>
 
+      <div class="col-3 m-2">
+        <button @click="onLoadClick" class="btn btn-primary m-2">Загрузить собак</button>
+      </div>
+    </div>
+    <!-- </div> -->
 
 
-      <form @submit.prevent.stop="onDogAdd">
-      
+    <form @submit.prevent.stop="onDogAdd">
+
       <div class="row m-1">
-        <div class="col">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <input type="text" class="form-control" v-model="dogToAdd.name" required />
             <label for="floatingInput">Имя</label>
           </div>
         </div>
-        <div class="col">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <select name="" id="" class="form-select" v-model="dogToAdd.breed">
               <option :value="b.id" v-for="b in breed">{{ b.name }}</option>
@@ -248,13 +238,13 @@ watch(selectedOwnerId, () => {
             <label for="floatingInput">Порода</label>
           </div>
         </div>
-        <div class="col">
+        <div class="col-5 ms-1 m-2">
           <input class="form-control" type="file" ref="dogsPicturesRef" @change="dogsAddPictureChange">
         </div>
-        <div class="col">
+        <div class="col-5 ms-1 m-2">
           <img :src="dogAddImageUrl" style="max-height:  60px;" alt="">
         </div>
-        <div class="col">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <select name="" id="" class="form-select" v-model="dogToAdd.owner">
               <option :value="o.id" v-for="o in owner">{{ o.first_name }} {{ o.last_name }}</option>
@@ -262,7 +252,7 @@ watch(selectedOwnerId, () => {
             <label for="floatingInput">Хозяин</label>
           </div>
         </div>
-        <div class="col">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <select name="" id="" class="form-select" v-model="dogToAdd.country">
               <option :value="c.id" v-for="c in country">{{ c.country }}</option>
@@ -270,7 +260,7 @@ watch(selectedOwnerId, () => {
             <label for="floatingInput">Страна</label>
           </div>
         </div>
-        <div class="col">
+        <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <select name="" id="" class="form-select" v-model="dogToAdd.hobby">
               <option :value="h.id" v-for="h in hobby">{{ h.name_hobby }}</option>
@@ -286,6 +276,37 @@ watch(selectedOwnerId, () => {
       </div>
     </form>
 
+
+
+
+
+    <div class="row border align-items-center m-2 rounded" v-for="dog in dogs">
+      <div class="col-9">
+        <div class="dog-item">
+          {{ dog.name }}
+        </div>
+      </div>
+      <div class="col-1 m-1">
+        <div v-show="dog.picture" @click="showModal = true; selectedImage = dog.picture">
+          <img :src="dog.picture" style="max-height: 60px; border-radius: 10%;" data-bs-toggle="modal"
+            data-bs-target="#pictureDogModal">
+        </div>
+      </div>
+      <div class="col">
+        <button class="btn btn-success" @click="onDogEditClick(dog)" data-bs-toggle="modal"
+          data-bs-target="#editDogModal">
+          <i class="bi bi-pen-fill"></i>
+        </button>
+      </div>
+      <div class="col">
+        <button class="btn btn-danger" @click="onRemoveClick(dog)">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+
+
     <div class="modal fade" id="editDogModal" tabindex="-1"
       @hidden.bs.modal="dogsEditPicturesRef.value = null; dogEditImageUrl.value = null;">
       <div class="modal-dialog">
@@ -298,13 +319,13 @@ watch(selectedOwnerId, () => {
           </div>
           <div class="modal-body">
             <div class="row">
-              <div class="col">
+              <div class="col-5 ms-1 m-2">
                 <div class="form-floating">
                   <input type="text" class="form-control" v-model="dogToEdit.name" />
                   <label for="floatingInput">Имя</label>
                 </div>
               </div>
-              <div class="col">
+              <div class="col-5 ms-1 m-2">
                 <div class="form-floating">
                   <select name="" id="" class="form-select" v-model="dogToEdit.breed">
                     <option :value="b.id" v-for="b in breed">{{ b.name }}</option>
@@ -312,10 +333,10 @@ watch(selectedOwnerId, () => {
                   <label for="floatingInput">Порода</label>
                 </div>
               </div>
-              <div class="col">
+              <div class="col-5 ms-1 m-2">
                 <input class="form-control" type="file" ref="dogsEditPicturesRef" @change="dogsEditPictureChange">
               </div>
-              <div class="col">
+              <div class="col-5 ms-1 m-2">
                 <div class="form-floating">
                   <select name="" id="" class="form-select" v-model="dogToEdit.owner">
                     <option :value="o.id" v-for="o in owner">{{ o.first_name }} {{ o.last_name }}</option>
@@ -323,7 +344,7 @@ watch(selectedOwnerId, () => {
                   <label for="floatingInput">Хозяин</label>
                 </div>
               </div>
-              <div class="col">
+              <div class="col-5 ms-1 m-2">
                 <div class="form-floating">
                   <select name="" id="" class="form-select" v-model="dogToEdit.country">
                     <option :value="c.id" v-for="c in country">{{ c.country }}</option>
@@ -331,7 +352,7 @@ watch(selectedOwnerId, () => {
                   <label for="floatingInput">Страна</label>
                 </div>
               </div>
-              <div class="col">
+              <div class="col-5 ms-1 m-2">
                 <div class="form-floating">
                   <select name="" id="" class="form-select" v-model="dogToEdit.hobby">
                     <option :value="h.id" v-for="h in hobby">{{ h.name_hobby }}</option>
@@ -354,12 +375,14 @@ watch(selectedOwnerId, () => {
     </div>
   </div>
 
-  <div v-if="dogStats" class="m-3">
-    <h3>Статистика по собакам:</h3>
-    <p>Количество: {{ dogStats.count }}</p>
-    <p>Среднее id: {{ dogStats.avg }}</p>
-    <p>Максимальное id: {{ dogStats.max }}</p>
-    <p>Минимальное id: {{ dogStats.min }}</p>
+  <div v-if="isAuthenticated">
+    <div v-if="dogStats" class="m-3">
+      <h3>Статистика по собакам:</h3>
+      <p>Количество: {{ dogStats.count }}</p>
+      <p>Среднее id: {{ dogStats.avg }}</p>
+      <p>Максимальное id: {{ dogStats.max }}</p>
+      <p>Минимальное id: {{ dogStats.min }}</p>
+    </div>
   </div>
 
 
@@ -380,7 +403,4 @@ watch(selectedOwnerId, () => {
   </div>
 </template>
 
-<style scoped>
-
-
-</style>
+<style scoped></style>

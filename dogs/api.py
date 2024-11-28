@@ -36,14 +36,14 @@ class UserProfileViewSet(
             'is_authenticated': self.request.user.is_authenticated
         })
     
-    @action(detail=False, url_path="login", methods=['GET'], permission_classes=[])
-    def use_login(self, request, *args, **kwargs):
-        user= authenticate(username='username', password='pass')
-        if user:
-            login(request, user)
-        return Response({
-            'is_authenticated': bool(user)
-        })
+    # @action(detail=False, url_path="login", methods=['GET'], permission_classes=[])
+    # def use_login(self, request, *args, **kwargs):
+    #     user= authenticate(username='username', password='pass')
+    #     if user:
+    #         login(request, user)
+    #     return Response({
+    #         'is_authenticated': bool(user)
+    #     })
 
     @action(detail=False, url_path='otp-login', methods=['POST'], serializer_class=OTPSerializer)
     def otp_login(self, *args, **kwargs):
@@ -96,12 +96,14 @@ class UserViewset(GenericViewSet):
         
         @action(detail=False, methods=['POST'], url_path='login')
         def login(self, request, *args, **kwargs):
-            user = request.data["user"],
-            pas = request.data["pass"]
-            user = authenticate(request, username = user, password = pas)
+            username = request.data.get("user") 
+            password = request.data.get("pass") 
+            user = authenticate(request, username = username, password = password)
             if user:
-                login(request,user)
-            return Response({})
+                login(request, user)
+                return Response({"status": "success"})  # Возвращаем успешный ответ
+            else:
+                return Response({"status": "error", "message": "Неверные учетные данные"}, status=401) 
         
         @action(detail=False, methods=['POST'], url_path='logout')
         def logout(self, request, *args, **kwargs):
@@ -113,12 +115,11 @@ class UserViewset(GenericViewSet):
 class IsOwnerOrReadOnly(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
-        # Разрешить чтение всем
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Разрешить запись только владельцу объекта
-        return obj.user == request.user and cache.get(f'otp_good:{request.user.id}', False)
+        return request.user.is_superuser or obj.user == request.user and cache.get(f'otp_good:{request.user.id}', False)
+    
 
 class DogsViewset(
     mixins.CreateModelMixin, 
@@ -150,7 +151,7 @@ class DogsViewset(
             # Если суперпользователь, добавляем возможность фильтрации по пользователю
             user_id = self.request.query_params.get('user_id', None)  # Получаем user_id из параметров запроса
             if user_id:
-                qs = qs.filter(user_id=user_id)
+                qs = qs.filter(owner__user_id=user_id)
 
         return qs
         
@@ -162,8 +163,15 @@ class DogsViewset(
 
     @action(detail=False, methods=['GET'], url_path='stats')
     def get_stats(self, request, *args, **kwargs):
-        print('123')
-        stats = Dog.objects.aggregate(
+        qs = Dog.objects.all()
+
+        user_id = request.query_params.get('user_id')
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+            print("user_id")
+            print(user_id)
+
+        stats = qs.aggregate(
             count=Count('*'),
             avg=Avg('id'),
             max=Max('id'),
@@ -171,8 +179,7 @@ class DogsViewset(
         )
 
         serializer = self.StatsSerializer(instance=stats)
-
-        return Response(serializer.data) 
+        return Response(serializer.data)
 
 class BreedsViewset(
     mixins.CreateModelMixin, 
@@ -185,17 +192,33 @@ class BreedsViewset(
     serializer_class = BreedSerializer
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=["GET"], url_path="stats")
+    class StatsSerializer(serializers.Serializer):
+        count = serializers.IntegerField()
+        avg = serializers.FloatField()
+        max = serializers.IntegerField()
+        min = serializers.IntegerField()
+
+    @action(detail=False, methods=['GET'], url_path='stats')
     def get_stats(self, request, *args, **kwargs):
-        print('1')
-        stats = Breed.objects.aggregate(
-            count=Count("*"),
-            avg=Avg("id"),
-            max=Max("id"),
-            min=Min("id"),
+        qs = Breed.objects.all()
+
+        user_id = request.query_params.get('user_id')
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+            print("user_id")
+            print(user_id)
+
+        stats = qs.aggregate(
+            count=Count('*'),
+            avg=Avg('id'),
+            max=Max('id'),
+            min=Min('id'),
         )
+
         serializer = self.StatsSerializer(instance=stats)
         return Response(serializer.data)
+
+
 
 
 class OwnersViewset(
@@ -255,14 +278,29 @@ class CountryViewset(
     serializer_class = CountrySerializer
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=["GET"], url_path="stats")
+    class StatsSerializer(serializers.Serializer):
+        count = serializers.IntegerField()
+        avg = serializers.FloatField()
+        max = serializers.IntegerField()
+        min = serializers.IntegerField()
+
+    @action(detail=False, methods=['GET'], url_path='stats')
     def get_stats(self, request, *args, **kwargs):
-        stats = Country.objects.aggregate(
-            count=Count("*"),
-            avg=Avg("id"),
-            max=Max("id"),
-            min=Min("id"),
+        qs = Country.objects.all()
+
+        user_id = request.query_params.get('user_id')
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+            print("user_id")
+            print(user_id)
+
+        stats = qs.aggregate(
+            count=Count('*'),
+            avg=Avg('id'),
+            max=Max('id'),
+            min=Min('id'),
         )
+
         serializer = self.StatsSerializer(instance=stats)
         return Response(serializer.data)
 
@@ -277,13 +315,28 @@ class HobbyViewset(
     serializer_class = HobbySerializer
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=["GET"], url_path="stats")
+    class StatsSerializer(serializers.Serializer):
+        count = serializers.IntegerField()
+        avg = serializers.FloatField()
+        max = serializers.IntegerField()
+        min = serializers.IntegerField()
+
+    @action(detail=False, methods=['GET'], url_path='stats')
     def get_stats(self, request, *args, **kwargs):
-        stats = Hobby.objects.aggregate(
-            count=Count("*"),
-            avg=Avg("id"),
-            max=Max("id"),
-            min=Min("id"),
+        qs = Hobby.objects.all()
+
+        user_id = request.query_params.get('user_id')
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+            print("user_id")
+            print(user_id)
+
+        stats = qs.aggregate(
+            count=Count('*'),
+            avg=Avg('id'),
+            max=Max('id'),
+            min=Min('id'),
         )
+
         serializer = self.StatsSerializer(instance=stats)
         return Response(serializer.data)

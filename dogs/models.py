@@ -33,8 +33,12 @@ class Owner(models.Model):
     first_name = models.TextField("Имя")
     last_name = models.TextField("Фамилия")
     phone_number = models.TextField("Номер телефона")
-    pictureOwner = models.ImageField("Изображение", null=True, upload_to="owner")
+    pictureOwner = models.ImageField("Изображение", null=True, upload_to="owner", blank=True)
     user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
+
+    @property
+    def user_name(self):
+        return self.user.username
 
     class Meta:
         verbose_name = "Владелец"

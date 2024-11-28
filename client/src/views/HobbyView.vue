@@ -3,7 +3,7 @@ import {computed, ref, onBeforeMount} from 'vue';
 import axios from "axios";
 import Cookies from 'js-cookie';
 
-const hobby = ref({});
+const hobbies = ref({});
 const hobbyToEdit = ref({});
 const hobbyToAdd = ref({});
 
@@ -12,7 +12,7 @@ const loading = ref(false);
 async function fetchHobby(){
   const r = await axios.get("/api/hobby/");
   console.log(r.data)
-  hobby.value = r.data;
+  hobbies.value = r.data;
 }
 
 async function onLoadClickForHobby(){
@@ -59,27 +59,18 @@ async function fetchHobbyStats() {
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
   fetchHobbyStats();
+  fetchHobby();
 })
 
 </script>
 
 <template>
     <div><br>
-    <button @click="onLoadClickForHobby">Загрузить хобби собак</button>
-
-    <div v-for="h in hobby" class="hobby-item">
-      <div>{{ h.name_hobby }}</div>
-      <button class="btn btn-success" @click="onHobbyEditClick(h)" data-bs-toggle="modal" data-bs-target="#editDogModal5"> 
-        <i class="bi bi-pen-fill"></i>
-      </button>
-      <button class="btn btn-danger" @click="onRemoveClickForHobby(h)">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
+    <button class="btn btn-primary m-2" @click="onLoadClickForHobby">Загрузить хобби собак</button>
 
     <form @submit.prevent.stop="onDogClickForHobby">
       <div class="row">
-        <div class="col-auto">
+        <div class="col-5 ms-1 m-2">
         <div class="form-floating">
             <input
               type="text"
@@ -90,13 +81,33 @@ onBeforeMount(() => {
             <label for="floatingInput">Добавим хобби</label>
           </div>
         </div>
-        <div class="col-auto">
+        <div class="col-5 ms-1 m-2">
           <button class="btn btn-primary">
             Добавить
           </button>
         </div>
       </div>
     </form>
+
+
+    <div class="row border align-items-center m-2 rounded" v-for="hobby in hobbies">
+      <div class="col-10">
+        <div class="country-item">
+          {{ hobby.name_hobby }}
+        </div>
+      </div>
+      <div class="col">
+        <button class="btn btn-success" @click="onHobbyEditClick(hobby)" data-bs-toggle="modal"
+          data-bs-target="#editDogModal5">
+          <i class="bi bi-pen-fill"></i>
+        </button>
+      </div>
+      <div class="col">
+        <button class="btn btn-danger" @click="onRemoveClickForHobby(hobby)">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
 
     <div class="modal fade" id="editDogModal5" tabindex="-1">
       <div class="modal-dialog">
@@ -132,7 +143,7 @@ onBeforeMount(() => {
     </div>
   </div>
 
-  <div v-if="hobbyStats">
+  <div v-if="hobbyStats" class="m-3">
       <h3>Статистика по хобби:</h3>
       <p>Количество: {{ hobbyStats.count }}</p>
       <p>Среднее id: {{ hobbyStats.avg }}</p>

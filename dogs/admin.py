@@ -11,7 +11,10 @@ class BreedAdmin(admin.ModelAdmin):
 
 @admin.register(Owner)
 class OwnerAdmin(admin.ModelAdmin):
-    list_display = ['id', 'first_name', 'last_name', 'phone_number']      
+    search_fields = ['first_name','last_name', 'user__username'] 
+    list_display = ['id', 'first_name', 'last_name', 'phone_number', 'user_name']   
+
+
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):

@@ -6,7 +6,7 @@ import useUserState from '../../stores/userStore';
 
 const userStore = useUserState();
 
-const breed = ref({});
+const breeds = ref({});
 const breedToEdit = ref({});
 const breedToAdd = ref({});
 
@@ -16,7 +16,7 @@ const loading = ref(false);
 async function fetchBreeds(){
   const r = await axios.get("/api/breed/");
   console.log(r.data)
-  breed.value = r.data;
+  breeds.value = r.data;
 }
 
 
@@ -53,8 +53,6 @@ async function onUpdateBreed() {
 }
 
 
-
-
 const breedStats = ref(null);
 
 async function fetchBreedStats() {
@@ -63,31 +61,23 @@ async function fetchBreedStats() {
 }
 
 
-
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
   fetchBreedStats();
+  fetchBreeds();
 })
+
 
 </script>
 
 <template>
   <div><br>
-    <button @click="onLoadClickForBreed">Загрузить породы собак</button>
+    <button class="btn btn-primary m-2" @click="onLoadClickForBreed">Загрузить породы собак</button>
 
-    <div v-for="b in breed" class="breed-item">
-      <div>{{ b.name }}</div>
-      <button class="btn btn-success" @click="onBreedEditClick(b)" data-bs-toggle="modal" data-bs-target="#editDogModal2"> 
-        <i class="bi bi-pen-fill"></i>
-      </button>
-      <button class="btn btn-danger" @click="onRemoveClickForBreed(b)">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
-
+    
     <form @submit.prevent.stop="onDogClickForBreeds">
       <div class="row">
-        <div class="col-auto">
+        <div class="col-3 m-2">
         <div class="form-floating">
             <input
               type="text"
@@ -95,16 +85,38 @@ onBeforeMount(() => {
               v-model="breedToAdd.name"
               required
             />
-            <label for="floatingInput">Добавим породу</label>
+            <label for="floatingInput">Добавить породу</label>
           </div>
         </div>
-        <div class="col-auto">
+        <div class="col-3 m-3">
           <button class="btn btn-primary">
             Добавить
           </button>
         </div>
       </div>
     </form>  
+
+
+    <div class="row border align-items-center m-2 rounded" v-for="breed in breeds">
+      <div class="col-10">
+        <div class="breed-item">
+          {{ breed.name }}
+        </div>
+      </div>
+      <div class="col">
+        <button class="btn btn-success" @click="onBreedEditClick(breed)" data-bs-toggle="modal"
+          data-bs-target="#editDogModal2">
+          <i class="bi bi-pen-fill"></i>
+        </button>
+      </div>
+      <div class="col">
+        <button class="btn btn-danger" @click="onRemoveClickForBreed(breed)">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+
 
     <div class="modal fade" id="editDogModal2" tabindex="-1">
       <div class="modal-dialog">
@@ -141,8 +153,7 @@ onBeforeMount(() => {
   </div> 
   
 
-
-  <div v-if="breedStats">
+    <div v-if="breedStats" class="m-3">
       <h3>Статистика по пародам:</h3>
       <p>Количество: {{ breedStats.count }}</p>
       <p>Среднее id: {{ breedStats.avg }}</p>

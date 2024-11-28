@@ -55,9 +55,7 @@ class DogListSerializer(serializers.ModelSerializer):
 
 class DogCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
-        # Получаем текущего пользователя из контекста запроса
         user = self.context['request'].user
-        # Создаем объект Dog с привязкой к пользователю
         dog = Dog.objects.create(user=user, **validated_data)
         return dog
 

@@ -3,7 +3,7 @@ import {computed, ref, onBeforeMount} from 'vue';
 import axios from "axios";
 import Cookies from 'js-cookie';
 
-const country = ref({});
+const countries = ref({});
 const countryToEdit = ref({});
 const countryToAdd = ref({});
 
@@ -12,7 +12,7 @@ const loading = ref(false);
 async function fetchCountry(){
   const r = await axios.get("/api/country/");
   console.log(r.data)
-  country.value = r.data;
+  countries.value = r.data;
 }
 
 async function onLoadClickForBreedCountry(){
@@ -57,27 +57,18 @@ async function fetchCountryStats() {
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
   fetchCountryStats();
+  fetchCountry();
 })
 
 </script>
 
 <template>
   <div><br>
-    <button @click="onLoadClickForBreedCountry">Загрузить страны собак</button>
-
-    <div v-for="c in country" class="country-item">
-      <div>{{ c.country }}</div>
-      <button class="btn btn-success" @click="onCountryEditClick(c)" data-bs-toggle="modal" data-bs-target="#editDogModal4"> 
-        <i class="bi bi-pen-fill"></i>
-      </button>
-      <button class="btn btn-danger" @click="onRemoveClickForCountry(c)">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
+    <button class="btn btn-primary m-2" @click="onLoadClickForBreedCountry">Загрузить страны собак</button>
 
     <form @submit.prevent.stop="onDogClickForCountry">
       <div class="row">
-        <div class="col-auto">
+        <div class="col-5 ms-1 m-2">
         <div class="form-floating">
             <input
               type="text"
@@ -88,13 +79,34 @@ onBeforeMount(() => {
             <label for="floatingInput">Добавим страну</label>
           </div>
         </div>
-        <div class="col-auto">
+        <div class="col-5 ms-1 m-2">
           <button class="btn btn-primary">
             Добавить
           </button>
         </div>
       </div>
     </form>
+
+
+    <div class="row border align-items-center m-2 rounded" v-for="country in countries">
+      <div class="col-10">
+        <div class="country-item">
+          {{ country.country }}
+        </div>
+      </div>
+      <div class="col">
+        <button class="btn btn-success" @click="onCountryEditClick(country)" data-bs-toggle="modal"
+          data-bs-target="#editDogModal4">
+          <i class="bi bi-pen-fill"></i>
+        </button>
+      </div>
+      <div class="col">
+        <button class="btn btn-danger" @click="onRemoveClickForCountry(country)">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
 
     <div class="modal fade" id="editDogModal4" tabindex="-1">
       <div class="modal-dialog">
@@ -131,11 +143,13 @@ onBeforeMount(() => {
   </div>
 
   <div v-if="countryStats">
+    <div v-if="countryStats" class="m-3">
       <h3>Статистика по странам:</h3>
       <p>Количество: {{ countryStats.count }}</p>
       <p>Среднее id: {{ countryStats.avg }}</p>
       <p>Максимальное id: {{ countryStats.max }}</p>
       <p>Минимальное id: {{ countryStats.min }}</p>
+      </div>
     </div>
 </template>
 
