@@ -9,6 +9,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache  
 from rest_framework.permissions import BasePermission
 import pyotp
+from openpyxl import Workbook 
+from django.http import FileResponse
+import io
 
 from dogs.models import Breed, Dog, Owner, Country, Hobby
 from dogs.serializers import DogCreateSerializer, DogListSerializer, BreedSerializer, OwnerSerializer, CountrySerializer, HobbySerializer, DogUpdateSerializer
@@ -132,7 +135,7 @@ class DogsViewset(
     serializer_class = DogListSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['user'] 
+    filterset_fields = ['name', 'breed__name', 'owner__first_name', 'owner__last_name', 'country__country', 'hobby__name_hobby']
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -163,23 +166,50 @@ class DogsViewset(
 
     @action(detail=False, methods=['GET'], url_path='stats')
     def get_stats(self, request, *args, **kwargs):
-        qs = Dog.objects.all()
+        try:
+            qs = Dog.objects.all()
 
-        user_id = request.query_params.get('user_id')
-        if user_id:
-            qs = qs.filter(user_id=user_id)
-            print("user_id")
-            print(user_id)
+            user_id = request.query_params.get('user_id')
+            if user_id:
+                qs = qs.filter(user_id=user_id)
+                print("user_id")
+                print(user_id)
 
-        stats = qs.aggregate(
-            count=Count('*'),
-            avg=Avg('id'),
-            max=Max('id'),
-            min=Min('id'),
-        )
+            stats = qs.aggregate(
+                count=Count('*'),
+                avg=Avg('id'),
+                max=Max('id'),
+                min=Min('id'),
+            )
 
-        serializer = self.StatsSerializer(instance=stats)
-        return Response(serializer.data)
+            serializer = self.StatsSerializer(instance=stats)
+            return Response(serializer.data)
+    
+        except Exception as e:
+            print(f"Ошибка при экспорте: {e}")
+            return Response({"error": str(e)}, status=500)
+    
+
+    @action(detail=False, methods=['GET'], url_path='export')
+    def export_data(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+
+        # Экспорт в Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.append(['ID', 'Имя', 'Порода', 'Владелец', 'Страна', 'Хобби'])  
+
+        for dog in qs:
+            owner_name = f"{dog.owner.first_name} {dog.owner.last_name}" if dog.owner else ""
+            ws.append([dog.id, dog.name, dog.breed.name if dog.breed else "", owner_name, dog.country.country if dog.country else "", dog.hobby.name_hobby if dog.hobby else ""])
+
+
+        # Сохраняем Excel файл в памяти
+        with io.BytesIO() as output:
+            wb.save(output)
+            output.seek(0)
+
+            return FileResponse(output, as_attachment=True, filename='dogs.xlsx', content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 class BreedsViewset(
     mixins.CreateModelMixin, 
@@ -231,8 +261,8 @@ class OwnersViewset(
     queryset = Owner.objects.all()
     serializer_class = OwnerSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    # filter_backends = [DjangoFilterBackend]
-    # filterset_fields = ['user']
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['user', 'first_name', 'last_name', 'phone_number']
 
     def get_queryset(self):
         qs = super().get_queryset()  # Используем super() для получения queryset

@@ -37,12 +37,22 @@ const loading = ref(false);
 
 async function fetchDogs() {
   loading.value = true;
-  const r = await axios.get("/api/dogs/", {
-    params: {
-      user_id: selectedOwnerId.value,
+  const params = {
+    user_id: selectedOwnerId.value,
+    name: dogNameFilter.value,
+    'breed__name': dogBreedFilter.value,
+    'country__country': dogCountryFilter.value,
+    'hobby__name_hobby': dogHobbyFilter.value,
+  };
+
+  // Удаляем пустые параметры из запроса
+  for (const key in params) {
+    if (params[key] === '') {
+      delete params[key];
     }
-  });
-  console.log(r.data)
+  }
+
+  const r = await axios.get("/api/dogs/", { params });
   dogs.value = r.data;
   loading.value = false;
 }
@@ -168,7 +178,7 @@ const hobbyStats = ref(null);
 async function fetchDogStats() {
   const r = await axios.get("/api/dogs/stats/", {
     params: {
-      user_id: selectedOwnerId.value  
+      user_id: selectedOwnerId.value
     }
   });
   dogStats.value = r.data;
@@ -200,25 +210,92 @@ watch(selectedOwnerId, () => {
   fetchDogStats();
 });
 
+const dogNameFilter = ref('');
+const dogBreedFilter = ref('');
+const dogCountryFilter = ref('');
+const dogHobbyFilter = ref('');
+
+
+
+async function exportToExcel() {
+    try {
+        const response = await axios.get('/api/dogs/export/', {
+            params: {
+                user_id: selectedOwnerId.value,
+                name: dogNameFilter.value,
+                'breed__name': dogBreedFilter.value,
+                'country__country': dogCountryFilter.value,
+                'hobby__name_hobby': dogHobbyFilter.value,
+            },
+            responseType: 'blob', 
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'dogs.xlsx');
+        document.body.appendChild(link);
+        link.click();
+  } catch (error) {
+        console.error("Ошибка при экспорте:", error);
+    }
+}
+
 </script>
 
 <template>
+
+  <button @click="exportToExcel" class="btn btn-success m-4">Экспорт в Excel</button>
+
+
   <div v-if="owner">
     <div class="row m-1">
-      <div class="col-3 m-2">
+      <div class="col-2 m-1">
         <div class="form-floating">
           <select name="" id="" class="form-select" v-model="selectedOwnerId">
+            <option value="">Все владельцы</option>
             <option :value="u.id" v-for="u in owner">{{ u.first_name }}</option>
           </select>
           <label for="floatingInput">Пользователь</label>
         </div>
       </div>
-
-      <div class="col-3 m-2">
-        <button @click="onLoadClick" class="btn btn-primary m-2">Загрузить собак</button>
+      <div class="col-2 m-1">
+        <div class="form-floating">
+          <input type="text" class="form-control" v-model="dogNameFilter" @input="fetchDogs" />
+          <label for="floatingInput">Имя собаки</label>
+        </div>
       </div>
+      <div class="col-2 m-1">
+        <div class="form-floating">
+          <select name="" id="" class="form-select" v-model="dogBreedFilter" @change="fetchDogs">
+            <option value="">Все породы</option>
+            <option :value="b.name" v-for="b in breed">{{ b.name }}</option>
+          </select>
+          <label for="floatingInput">Порода</label>
+        </div>
+      </div>
+      <div class="col-2 m-1">
+        <div class="form-floating">
+          <select name="" id="" class="form-select" v-model="dogCountryFilter" @change="fetchDogs">
+            <option value="">Все страны</option>
+            <option :value="c.country" v-for="c in country">{{ c.country }}</option>
+          </select>
+          <label for="floatingInput">Страна</label>
+        </div>
+      </div>
+      <div class="col-2 m-1">
+        <div class="form-floating">
+          <select name="" id="" class="form-select" v-model="dogHobbyFilter" @change="fetchDogs">
+            <option value="">Все хобби</option>
+            <option :value="h.name_hobby" v-for="h in hobby">{{ h.name_hobby }}</option>
+          </select>
+          <label for="floatingInput">Хобби</label>
+        </div>
+      </div>
+      <!-- <div class="col-2 m-1">
+        <button @click="onLoadClick" class="btn btn-primary m-1">Загрузить собак</button>
+      </div> -->
     </div>
-    <!-- </div> -->
 
 
     <form @submit.prevent.stop="onDogAdd">

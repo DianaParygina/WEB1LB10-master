@@ -18,12 +18,36 @@ const ownerEditImageUrl = ref();
 
 const loading = ref(false);
 
+const firstNameFilter = ref('');
+const lastNameFilter = ref('');
+const phoneNumberFilter = ref('');
+
 async function fetchOwner() {
   loading.value = true;
-  const r = await axios.get("/api/owner/");
+
+  const params = {
+    first_name: firstNameFilter.value,
+    last_name: lastNameFilter.value,
+    phone_number: phoneNumberFilter.value,
+  };
+
+  // Удаляем пустые параметры из запроса
+  for (const key in params) {
+    if (params[key] === '') {
+      delete params[key];
+    }
+  }
+
+    const r = await axios.get("/api/owner/", { params: params }); 
+    owner.value = r.data;
+    loading.value = false;
+}
+
+
+async function fetchBreeds() {
+  const r = await axios.get("/api/breed/");
   console.log(r.data)
-  owner.value = r.data;
-  loading.value = false;
+  breed.value = r.data;
 }
 
 async function ownersAddPictureChange() {
@@ -109,10 +133,30 @@ onBeforeMount(() => {
 
 <template>
   <div><br>
-    <button class="btn btn-primary m-2" @click="onLoadClickForOwner">Загрузить хозяинов собак</button>
+    <div class="row m-1">
+      <div class="col-2 m-1">
+        <div class="form-floating">
+          <input type="text" class="form-control" v-model="firstNameFilter" @input="fetchOwner" />
+          <label for="floatingInput">Имя владельца</label>
+        </div>
+      </div>
+      <div class="col-2 m-1">
+        <div class="form-floating">
+          <input type="text" class="form-control" v-model="lastNameFilter" @input="fetchOwner" />
+          <label for="floatingInput">Фамилия владельца</label>
+        </div>
+      </div>
+      <div class="col-2 m-1">
+        <div class="form-floating">
+          <input type="text" class="form-control" v-model="phoneNumberFilter" @input="fetchOwner" />
+          <label for="floatingInput">Телефон владельца</label>
+        </div>
+      </div>
+    </div>
+
 
     <form @submit.prevent.stop="onDogClickForOwner">
-      <div class="row">
+      <div class="row m-1">
         <div class="col-5 ms-1 m-2">
           <div class="form-floating">
             <input type="text" class="form-control" v-model="ownerToAdd.first_name" required />
