@@ -72,11 +72,11 @@ onBeforeMount(() => {
 
 <template>
   <div><br>
-    <button class="btn btn-primary m-2" @click="onLoadClickForBreed">Загрузить породы собак</button>
+    <button class="btn btn-primary ms-4" @click="onLoadClickForBreed">Загрузить породы собак</button>
 
     
     <form @submit.prevent.stop="onDogClickForBreeds">
-      <div class="row">
+      <div class="row m-1">
         <div class="col-3 m-2">
         <div class="form-floating">
             <input
