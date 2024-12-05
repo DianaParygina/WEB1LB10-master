@@ -9,8 +9,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache  
 from rest_framework.permissions import BasePermission
 import pyotp
-from openpyxl import Workbook 
-from django.http import FileResponse
+from openpyxl import Workbook
+from openpyxl.writer.excel import save_workbook
+from django.http import FileResponse, HttpResponse
 import io
 
 from dogs.models import Breed, Dog, Owner, Country, Hobby
@@ -190,11 +191,11 @@ class DogsViewset(
             return Response({"error": str(e)}, status=500)
     
 
+
     @action(detail=False, methods=['GET'], url_path='export')
     def export_data(self, request, *args, **kwargs):
         qs = self.filter_queryset(self.get_queryset())
 
-        # Экспорт в Excel
         wb = Workbook()
         ws = wb.active
         ws.append(['ID', 'Имя', 'Порода', 'Владелец', 'Страна', 'Хобби'])  
@@ -203,13 +204,15 @@ class DogsViewset(
             owner_name = f"{dog.owner.first_name} {dog.owner.last_name}" if dog.owner else ""
             ws.append([dog.id, dog.name, dog.breed.name if dog.breed else "", owner_name, dog.country.country if dog.country else "", dog.hobby.name_hobby if dog.hobby else ""])
 
+        virtual_workbook = io.BytesIO()
+        wb.save(virtual_workbook)
+        virtual_workbook.seek(0)
 
-        # Сохраняем Excel файл в памяти
-        with io.BytesIO() as output:
-            wb.save(output)
-            output.seek(0)
+        response = HttpResponse(content=virtual_workbook, content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename=dogs.xlsx'
+        return response
 
-            return FileResponse(output, as_attachment=True, filename='dogs.xlsx', content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+ 
 
 class BreedsViewset(
     mixins.CreateModelMixin, 
