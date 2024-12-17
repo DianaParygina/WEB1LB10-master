@@ -68,4 +68,9 @@ class DogUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dog
         fields = ['id', 'name', 'breed','owner', 'hobby', 'country', 'picture', 'user']        
-        read_only_fields = ['user']    
+        read_only_fields = ['user']   
+
+
+class LoginSerializer(serializers.Serializer):
+        username = serializers.CharField(required=True)
+        password = serializers.CharField(required=True, style={'input_type': 'password'}) 

@@ -7,8 +7,8 @@ const router = useRouter();
 
 <template>
   <div class="container"></div>
-  <nav class="navbar navbar-expand-sm navbar-light bg-light">
-  <a class="navbar-brand" href="#">Navbar</a>
+  <nav class="navbar navbar-expand-sm navbar-light bg-light px-4">
+  <a class="navbar-brand" href="#">Сайтик</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -31,7 +31,7 @@ const router = useRouter();
       </li>
     </ul>
 
-    <ul class="navbar-nav">
+    <!-- <ul class="navbar-nav">
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         Пользователь
@@ -40,7 +40,7 @@ const router = useRouter();
           <li><a class="dropdown-item" href="/admin">Админка</a></li>
         </ul>
       </li>
-    </ul>
+    </ul> -->
 
     <ul class="navbar-nav">
       <li class="nav-item">
